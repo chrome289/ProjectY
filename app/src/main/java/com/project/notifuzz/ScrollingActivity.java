@@ -8,8 +8,12 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
@@ -19,11 +23,9 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.Log;
-import android.view.MotionEvent;
-import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.AdapterView;
+import android.view.View;
 import android.widget.Button;
 
 import java.util.ArrayList;
@@ -34,6 +36,7 @@ public class ScrollingActivity extends AppCompatActivity implements View.OnClick
     private ArrayList<String> appName= new ArrayList<>();
     private ArrayList<String> notiHead= new ArrayList<>();
     private ArrayList<String> notiContent= new ArrayList<>();
+    private ArrayList<String> time= new ArrayList<>();
     private ArrayList<String> id= new ArrayList<>();
    private ArrayList<PendingIntent> pendingIntents=new ArrayList<>();
 
@@ -41,6 +44,9 @@ public class ScrollingActivity extends AppCompatActivity implements View.OnClick
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_scrolling);
+
+        PreferenceManager.setDefaultValues(this, R.xml.preference, false);
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         toolbar.setTitle("Notifuzz");
         setSupportActionBar(toolbar);
@@ -53,7 +59,17 @@ public class ScrollingActivity extends AppCompatActivity implements View.OnClick
                     @Override
                     public void onItemClick(View view, int position) {
                         try {
-                            pendingIntents.get(position).send();
+                            if(pendingIntents.get(position)!=null) {
+                                pendingIntents.get(position).send();
+                            }
+                                appIcon.remove(position);
+                                notiContent.remove(position);
+                                notiHead.remove(position);
+                                pendingIntents.remove(position);
+                                id.remove(position);
+                                appName.remove(position);
+                                time.remove(position);
+                                recyclerViewAdapter.notifyDataSetChanged();
                         } catch (PendingIntent.CanceledException e) {
                             e.printStackTrace();
                         }
@@ -68,13 +84,32 @@ public class ScrollingActivity extends AppCompatActivity implements View.OnClick
             }
 
             @Override
+            public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
+                if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
+                    View itemView = viewHolder.itemView;
+
+                    Paint p = new Paint();
+                    p.setColor(Color.rgb(224, 160, 150));
+                    if (dX > 0)
+                        c.drawRect((float) itemView.getLeft(), (float) itemView.getTop(), dX,
+                                (float) itemView.getBottom(), p);
+                    else
+                        c.drawRect((float) itemView.getRight() + dX, (float) itemView.getTop(),
+                                (float) itemView.getRight(), (float) itemView.getBottom(), p);
+
+                    super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
+                }
+            }
+
+            @Override
             public void onSwiped(RecyclerView.ViewHolder viewHolder, int swipeDir) {
-               appIcon.remove(viewHolder.getAdapterPosition());
+                appIcon.remove(viewHolder.getAdapterPosition());
                 notiContent.remove(viewHolder.getAdapterPosition());
                 notiHead.remove(viewHolder.getAdapterPosition());
                 pendingIntents.remove(viewHolder.getAdapterPosition());
                 id.remove(viewHolder.getAdapterPosition());
                 appName.remove(viewHolder.getAdapterPosition());
+                time.remove(viewHolder.getAdapterPosition());
                 recyclerViewAdapter.notifyDataSetChanged();
             }
         };
@@ -110,14 +145,10 @@ public class ScrollingActivity extends AppCompatActivity implements View.OnClick
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
-            return true;
+            startActivity(new Intent(this,PreferenceActivity.class));
         }
         return super.onOptionsItemSelected(item);
     }
@@ -147,6 +178,7 @@ public class ScrollingActivity extends AppCompatActivity implements View.OnClick
                 }
                 appIcon.set((id.indexOf(intent.getStringExtra("id"))), icon);
                 id.set((id.indexOf(intent.getStringExtra("id"))), intent.getStringExtra("id"));
+                time.set((id.indexOf(intent.getStringExtra("id"))),intent.getStringExtra("time"));
                 pendingIntents.set((id.indexOf(intent.getStringExtra("id"))), (PendingIntent) intent.getParcelableExtra("intent"));
             }else {
                 PackageManager packageManager = getApplicationContext().getPackageManager();
@@ -170,8 +202,10 @@ public class ScrollingActivity extends AppCompatActivity implements View.OnClick
                 appIcon.add(icon);
                 id.add(intent.getStringExtra("id"));
                 pendingIntents.add((PendingIntent) intent.getParcelableExtra("intent"));
+                time.add(intent.getStringExtra("time"));
             }
-            recyclerViewAdapter.updateList(appIcon,appName,notiHead,notiContent,id,pendingIntents);
+            Log.v("dfdf",intent.getStringExtra("time"));
+            recyclerViewAdapter.updateList(appIcon,appName,notiHead,notiContent,id,pendingIntents,time);
             recyclerViewAdapter.notifyDataSetChanged();
             /*String temp = intent.getStringExtra("notification_event") + "\n" + txtView.getText();
             txtView.setText(temp);*/
