@@ -7,16 +7,16 @@ import android.widget.TextView;
 
 public class RecyclerViewHolder extends RecyclerView.ViewHolder {
 
-    public TextView textView, textView2, textView3,textView4;
+    public TextView textView, textView2, textView3, textView4;
     ImageView imageView;
 
+    //default viewholder
     public RecyclerViewHolder(View convertView) {
         super(convertView);
         imageView = (ImageView) convertView.findViewById(R.id.imageView);
         textView = (TextView) convertView.findViewById(R.id.textView);
         textView2 = (TextView) convertView.findViewById(R.id.textView2);
         textView3 = (TextView) convertView.findViewById(R.id.textView3);
-        textView4=(TextView)convertView.findViewById(R.id.textView4);
-
+        textView4 = (TextView) convertView.findViewById(R.id.textView4);
     }
 }

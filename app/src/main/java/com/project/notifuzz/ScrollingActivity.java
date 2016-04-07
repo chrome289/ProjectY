@@ -15,6 +15,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.NotificationCompat;
@@ -26,25 +27,27 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
 
 import java.util.ArrayList;
 
 public class ScrollingActivity extends AppCompatActivity implements View.OnClickListener {
+
+    //arraylist for saving notification data
     private RecyclerViewAdapter recyclerViewAdapter;
-    private ArrayList<Bitmap> appIcon=new ArrayList<>();
-    private ArrayList<String> appName= new ArrayList<>();
-    private ArrayList<String> notiHead= new ArrayList<>();
-    private ArrayList<String> notiContent= new ArrayList<>();
-    private ArrayList<String> time= new ArrayList<>();
-    private ArrayList<String> id= new ArrayList<>();
-   private ArrayList<PendingIntent> pendingIntents=new ArrayList<>();
+    private ArrayList<Bitmap> appIcon = new ArrayList<>();
+    private ArrayList<String> appName = new ArrayList<>();
+    private ArrayList<String> notiHead = new ArrayList<>();
+    private ArrayList<String> notiContent = new ArrayList<>();
+    private ArrayList<String> time = new ArrayList<>();
+    private ArrayList<String> id = new ArrayList<>();
+    private ArrayList<PendingIntent> pendingIntents = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_scrolling);
 
+        //initializing preferences
         PreferenceManager.setDefaultValues(this, R.xml.preference, false);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -52,37 +55,44 @@ public class ScrollingActivity extends AppCompatActivity implements View.OnClick
         setSupportActionBar(toolbar);
 
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
+
+        //layoutmanager for recyclerview
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(mLayoutManager);
+
+        //onClick listener
         recyclerView.addOnItemTouchListener(
                 new RecyclerItemClickListener(this, new RecyclerItemClickListener.OnItemClickListener() {
                     @Override
                     public void onItemClick(View view, int position) {
                         try {
-                            if(pendingIntents.get(position)!=null) {
+                            if (pendingIntents.get(position) != null) {
+                                //pendingIntent used
                                 pendingIntents.get(position).send();
                             }
-                                appIcon.remove(position);
-                                notiContent.remove(position);
-                                notiHead.remove(position);
-                                pendingIntents.remove(position);
-                                id.remove(position);
-                                appName.remove(position);
-                                time.remove(position);
-                                recyclerViewAdapter.notifyDataSetChanged();
+                            //remove entry from recyclerview
+                            appIcon.remove(position);
+                            notiContent.remove(position);
+                            notiHead.remove(position);
+                            pendingIntents.remove(position);
+                            id.remove(position);
+                            appName.remove(position);
+                            time.remove(position);
+                            recyclerViewAdapter.notifyDataSetChanged();
                         } catch (PendingIntent.CanceledException e) {
                             e.printStackTrace();
                         }
                     }
                 })
         );
+        //ItemTouchHelper callback for swipe gesture
         ItemTouchHelper.SimpleCallback simpleItemTouchCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
-
             @Override
             public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
                 return false;
             }
 
+            //draw colored rectangle during swipe gesture
             @Override
             public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
                 if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
@@ -101,6 +111,7 @@ public class ScrollingActivity extends AppCompatActivity implements View.OnClick
                 }
             }
 
+            //clear entry from recyclerview on swipeCompleted
             @Override
             public void onSwiped(RecyclerView.ViewHolder viewHolder, int swipeDir) {
                 appIcon.remove(viewHolder.getAdapterPosition());
@@ -114,26 +125,27 @@ public class ScrollingActivity extends AppCompatActivity implements View.OnClick
             }
         };
 
+        //assign ItemTouchCallback to recyclerview
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleItemTouchCallback);
         itemTouchHelper.attachToRecyclerView(recyclerView);
 
         recyclerViewAdapter = new RecyclerViewAdapter();
+        //set adapter
         recyclerView.setAdapter(recyclerViewAdapter);
 
-        Button button = (Button) this.findViewById(R.id.button);
+        FloatingActionButton button = (FloatingActionButton) this.findViewById(R.id.button);
+        button.setOnClickListener(this);
+        button = (FloatingActionButton) this.findViewById(R.id.button2);
         button.setOnClickListener(this);
 
+        //ask user for notification access permission
         if (!Settings.Secure.getString(this.getContentResolver(), "enabled_notification_listeners").contains(getApplicationContext().getPackageName())) {
             startActivity(new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"));
         }
 
+        //register broadcast reciever from service
         LocalBroadcastManager.getInstance(this).registerReceiver(onNotice, new IntentFilter("Msg"));
 
-    }
-
-    @Override
-    public void onResume(){
-        super.onResume();
     }
 
     @Override
@@ -146,9 +158,9 @@ public class ScrollingActivity extends AppCompatActivity implements View.OnClick
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-
+        //settings window
         if (id == R.id.action_settings) {
-            startActivity(new Intent(this,PreferenceActivity.class));
+            startActivity(new Intent(this, PreferenceActivity.class));
         }
         return super.onOptionsItemSelected(item);
     }
@@ -157,8 +169,11 @@ public class ScrollingActivity extends AppCompatActivity implements View.OnClick
 
         @Override
         public void onReceive(Context context, Intent intent) {
+            //recieved broadcast from service
             Log.v("Message", "recieved");
-            if(id.contains(intent.getStringExtra("id"))){
+            //check if earlier version of notification exists
+            if (id.contains(intent.getStringExtra("id"))) {
+                //get data from recieved intent and assign
                 PackageManager packageManager = getApplicationContext().getPackageManager();
                 String app = null;
                 try {
@@ -166,7 +181,7 @@ public class ScrollingActivity extends AppCompatActivity implements View.OnClick
                 } catch (PackageManager.NameNotFoundException e) {
                     e.printStackTrace();
                 }
-                appName.set((id.indexOf(intent.getStringExtra("id"))),app);
+                appName.set((id.indexOf(intent.getStringExtra("id"))), app);
                 notiHead.set((id.indexOf(intent.getStringExtra("id"))), intent.getStringExtra("title"));
                 notiContent.set((id.indexOf(intent.getStringExtra("id"))), intent.getStringExtra("text"));
 
@@ -178,9 +193,9 @@ public class ScrollingActivity extends AppCompatActivity implements View.OnClick
                 }
                 appIcon.set((id.indexOf(intent.getStringExtra("id"))), icon);
                 id.set((id.indexOf(intent.getStringExtra("id"))), intent.getStringExtra("id"));
-                time.set((id.indexOf(intent.getStringExtra("id"))),intent.getStringExtra("time"));
+                time.set((id.indexOf(intent.getStringExtra("id"))), intent.getStringExtra("time"));
                 pendingIntents.set((id.indexOf(intent.getStringExtra("id"))), (PendingIntent) intent.getParcelableExtra("intent"));
-            }else {
+            } else {
                 PackageManager packageManager = getApplicationContext().getPackageManager();
                 String app = null;
                 try {
@@ -204,8 +219,9 @@ public class ScrollingActivity extends AppCompatActivity implements View.OnClick
                 pendingIntents.add((PendingIntent) intent.getParcelableExtra("intent"));
                 time.add(intent.getStringExtra("time"));
             }
-            Log.v("dfdf",intent.getStringExtra("time"));
-            recyclerViewAdapter.updateList(appIcon,appName,notiHead,notiContent,id,pendingIntents,time);
+            Log.v("dfdf", intent.getStringExtra("time"));
+            //update recyclerview
+            recyclerViewAdapter.updateList(appIcon, appName, notiHead, notiContent, id, pendingIntents, time);
             recyclerViewAdapter.notifyDataSetChanged();
             /*String temp = intent.getStringExtra("notification_event") + "\n" + txtView.getText();
             txtView.setText(temp);*/
@@ -225,6 +241,8 @@ public class ScrollingActivity extends AppCompatActivity implements View.OnClick
                 ncomp.setAutoCancel(true);
                 nManager.notify((int) System.currentTimeMillis(), ncomp.build());
                 break;
+            case R.id.button2:
+                startActivity(new Intent(this,AppSelectionActivity.class));
         }
     }
 }

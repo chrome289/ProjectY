@@ -26,6 +26,7 @@ class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewHolder> {
 
     @Override
     public RecyclerViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        //create viewholder for an entry
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
         View itemView = inflater.inflate(R.layout.listview_card, parent, false);
         return new RecyclerViewHolder(itemView);
@@ -34,6 +35,7 @@ class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewHolder> {
     @Override
     public void onBindViewHolder(RecyclerViewHolder holder, int position) {
 
+        //set data for the viewholder of any entry
         holder.textView.setText(appName.get(position) + "");
         Log.v("fgdfg", "dfgdf");
         holder.textView2.setText(notiHead.get(position) + "");
@@ -51,14 +53,15 @@ class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewHolder> {
         return 0;
     }
 
-    public void updateList(ArrayList<Bitmap> bitmaps, ArrayList<String> appName, ArrayList<String> notiHead, ArrayList<String> notiContent, ArrayList<String> id, ArrayList<PendingIntent> pendingIntents,ArrayList<String>time) {
+    //update recyclerview arraylists
+    public void updateList(ArrayList<Bitmap> bitmaps, ArrayList<String> appName, ArrayList<String> notiHead, ArrayList<String> notiContent, ArrayList<String> id, ArrayList<PendingIntent> pendingIntents, ArrayList<String> time) {
         this.bitmaps = bitmaps;
         this.appName = appName;
         this.notiHead = notiHead;
         this.notiContent = notiContent;
         this.id = id;
         this.pendingIntents = pendingIntents;
-        this.time=time;
+        this.time = time;
     }
 
     @Override
@@ -68,6 +71,4 @@ class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewHolder> {
         else
             return 0;
     }
-
-
 }

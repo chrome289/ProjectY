@@ -16,7 +16,7 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
-        card_view:cardElevation="4dp"
+        card_view:cardElevation="3dp"
         card_view:cardUseCompatPadding="true">
 
         <LinearLayout
@@ -29,7 +29,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical"
-                android:layout_weight="3.5">
+                android:layout_weight="4.5"
+                android:background="#efebe9">
 
                 <ImageView
                     android:layout_width="fill_parent"
@@ -37,66 +38,62 @@
                     android:id="@+id/imageView"
                     android:layout_gravity="center_horizontal"
                     android:contentDescription="icon"
-                    android:background="#efebe9" />
+                    android:background="#efebe9"
+                    android:layout_margin="2dp" />
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
+                android:orientation="horizontal"
                 android:background="#efebe9"
                 android:layout_weight="1"
                 >
 
-                <TextView
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Large Text"
-                    android:id="@+id/textView2"
-                    android:gravity="left|center"
-                    android:textSize="16sp"
-                    android:paddingLeft="15dp"
-                    android:paddingTop="5dp"
-                    android:paddingBottom="2dp" />
-
-                <TextView
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Medium Text"
-                    android:id="@+id/textView3"
-                    android:gravity="left|center"
-                    android:textSize="13sp"
-                    android:paddingLeft="15dp"
-                    android:paddingBottom="2dp" />
-
                 <LinearLayout
-                    android:orientation="horizontal"
+                    android:orientation="vertical"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent">
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1">
 
                     <TextView
-                        android:layout_width="wrap_content"
+                        android:layout_width="fill_parent"
                         android:layout_height="wrap_content"
-                        android:text="Small Text"
-                        android:id="@+id/textView"
+                        android:text="Large Text"
+                        android:id="@+id/textView2"
                         android:gravity="left|center"
-                        android:textSize="10sp"
+                        android:textSize="15sp"
                         android:paddingLeft="15dp"
-                        android:paddingRight="5dp"
-                        android:paddingBottom="10dp"
-                        android:paddingTop="2dp"
+                        android:paddingTop="5dp"
+                        android:paddingBottom="2dp"
                         android:layout_weight="1" />
 
                     <TextView
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textAppearance="?android:attr/textAppearanceSmall"
-                        android:text="00:00 AM"
-                        android:id="@+id/textView4"
+                        android:layout_height="fill_parent"
+                        android:text="Medium Text"
+                        android:id="@+id/textView3"
+                        android:gravity="left|center"
+                        android:textSize="12sp"
+                        android:paddingLeft="15dp"
+                        android:paddingBottom="10dp"
+                        android:layout_weight="1"
+                        android:paddingTop="5dp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:orientation="vertical"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent">
+
+                    <Switch
+                        android:layout_width="wrap_content"
+                        android:layout_height="fill_parent"
+                        android:id="@+id/switch1"
                         android:layout_gravity="right"
-                        android:layout_weight="0"
-                        android:paddingRight="5dp"
-                        android:paddingLeft="5dp" />
+                        android:layout_weight="1"
+                        android:checked="true"
+                        android:layout_marginRight="5dp" />
                 </LinearLayout>
 
             </LinearLayout>

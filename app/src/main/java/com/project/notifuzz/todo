@@ -1,3 +1,6 @@
 check_TODO enable/disable
 check_TODO no pendingintent specified bug
 check_TODO display time
+check_TODO app enable/disable
+check_TODO sort function
+check_TODO collapse toolbar

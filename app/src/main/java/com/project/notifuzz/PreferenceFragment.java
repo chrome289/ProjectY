@@ -3,7 +3,7 @@ package com.project.notifuzz;
 
 import android.os.Bundle;
 
-public class PreferenceFragment extends android.preference.PreferenceFragment{
+public class PreferenceFragment extends android.preference.PreferenceFragment {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
