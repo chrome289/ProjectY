@@ -6,12 +6,9 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
@@ -27,20 +24,12 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-
-import java.util.ArrayList;
+import android.widget.TextView;
 
 public class ScrollingActivity extends AppCompatActivity implements View.OnClickListener {
 
     //arraylist for saving notification data
     private RecyclerViewAdapter recyclerViewAdapter;
-    private ArrayList<Bitmap> appIcon = new ArrayList<>();
-    private ArrayList<String> appName = new ArrayList<>();
-    private ArrayList<String> notiHead = new ArrayList<>();
-    private ArrayList<String> notiContent = new ArrayList<>();
-    private ArrayList<String> time = new ArrayList<>();
-    private ArrayList<String> id = new ArrayList<>();
-    private ArrayList<PendingIntent> pendingIntents = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,19 +55,23 @@ public class ScrollingActivity extends AppCompatActivity implements View.OnClick
                     @Override
                     public void onItemClick(View view, int position) {
                         try {
-                            if (pendingIntents.get(position) != null) {
+                            if (NotificationService.pendingIntents.get(position) != null) {
                                 //pendingIntent used
-                                pendingIntents.get(position).send();
+                                NotificationService.pendingIntents.get(position).send();
                             }
                             //remove entry from recyclerview
-                            appIcon.remove(position);
-                            notiContent.remove(position);
-                            notiHead.remove(position);
-                            pendingIntents.remove(position);
-                            id.remove(position);
-                            appName.remove(position);
-                            time.remove(position);
+                            NotificationService.appIcon.remove(position);
+                            NotificationService.notiContent.remove(position);
+                            NotificationService.notiHead.remove(position);
+                            NotificationService.pendingIntents.remove(position);
+                            NotificationService.id.remove(position);
+                            NotificationService.appName.remove(position);
+                            NotificationService.time.remove(position);
+                            NotificationService.priorty.remove(position);
                             recyclerViewAdapter.notifyDataSetChanged();
+                            TextView textView = (TextView) findViewById(R.id.textView);
+                            textView.setText(NotificationService.appIcon.size() + " Notifications");
+
                         } catch (PendingIntent.CanceledException e) {
                             e.printStackTrace();
                         }
@@ -114,14 +107,18 @@ public class ScrollingActivity extends AppCompatActivity implements View.OnClick
             //clear entry from recyclerview on swipeCompleted
             @Override
             public void onSwiped(RecyclerView.ViewHolder viewHolder, int swipeDir) {
-                appIcon.remove(viewHolder.getAdapterPosition());
-                notiContent.remove(viewHolder.getAdapterPosition());
-                notiHead.remove(viewHolder.getAdapterPosition());
-                pendingIntents.remove(viewHolder.getAdapterPosition());
-                id.remove(viewHolder.getAdapterPosition());
-                appName.remove(viewHolder.getAdapterPosition());
-                time.remove(viewHolder.getAdapterPosition());
+                NotificationService.appIcon.remove(viewHolder.getAdapterPosition());
+                NotificationService.notiContent.remove(viewHolder.getAdapterPosition());
+                NotificationService.notiHead.remove(viewHolder.getAdapterPosition());
+                NotificationService.pendingIntents.remove(viewHolder.getAdapterPosition());
+                NotificationService.id.remove(viewHolder.getAdapterPosition());
+                NotificationService.appName.remove(viewHolder.getAdapterPosition());
+                NotificationService.time.remove(viewHolder.getAdapterPosition());
+                NotificationService.priorty.remove(viewHolder.getAdapterPosition());
                 recyclerViewAdapter.notifyDataSetChanged();
+                TextView textView = (TextView) findViewById(R.id.textView);
+                textView.setText(NotificationService.appIcon.size() + " Notifications");
+
             }
         };
 
@@ -140,9 +137,13 @@ public class ScrollingActivity extends AppCompatActivity implements View.OnClick
 
         //ask user for notification access permission
         if (!Settings.Secure.getString(this.getContentResolver(), "enabled_notification_listeners").contains(getApplicationContext().getPackageName())) {
-            startActivity(new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"));
+            startActivityForResult(new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"), 0);
         }
 
+        TextView textView = (TextView) findViewById(R.id.textView);
+        textView.setText(NotificationService.appIcon.size() + " Notifications");
+        recyclerViewAdapter.updateList(NotificationService.appIcon, NotificationService.appName, NotificationService.notiHead, NotificationService.notiContent, NotificationService.id, NotificationService.pendingIntents, NotificationService.time, NotificationService.priorty);
+        recyclerViewAdapter.notifyDataSetChanged();
         //register broadcast reciever from service
         LocalBroadcastManager.getInstance(this).registerReceiver(onNotice, new IntentFilter("Msg"));
 
@@ -171,57 +172,10 @@ public class ScrollingActivity extends AppCompatActivity implements View.OnClick
         public void onReceive(Context context, Intent intent) {
             //recieved broadcast from service
             Log.v("Message", "recieved");
-            //check if earlier version of notification exists
-            if (id.contains(intent.getStringExtra("id"))) {
-                //get data from recieved intent and assign
-                PackageManager packageManager = getApplicationContext().getPackageManager();
-                String app = null;
-                try {
-                    app = (String) packageManager.getApplicationLabel(packageManager.getApplicationInfo(intent.getStringExtra("package"), PackageManager.GET_META_DATA));
-                } catch (PackageManager.NameNotFoundException e) {
-                    e.printStackTrace();
-                }
-                appName.set((id.indexOf(intent.getStringExtra("id"))), app);
-                notiHead.set((id.indexOf(intent.getStringExtra("id"))), intent.getStringExtra("title"));
-                notiContent.set((id.indexOf(intent.getStringExtra("id"))), intent.getStringExtra("text"));
-
-                Bitmap icon = null;
-                try {
-                    icon = ((BitmapDrawable) getPackageManager().getApplicationIcon(intent.getStringExtra("package"))).getBitmap();
-                } catch (PackageManager.NameNotFoundException e) {
-                    e.printStackTrace();
-                }
-                appIcon.set((id.indexOf(intent.getStringExtra("id"))), icon);
-                id.set((id.indexOf(intent.getStringExtra("id"))), intent.getStringExtra("id"));
-                time.set((id.indexOf(intent.getStringExtra("id"))), intent.getStringExtra("time"));
-                pendingIntents.set((id.indexOf(intent.getStringExtra("id"))), (PendingIntent) intent.getParcelableExtra("intent"));
-            } else {
-                PackageManager packageManager = getApplicationContext().getPackageManager();
-                String app = null;
-                try {
-                    app = (String) packageManager.getApplicationLabel(packageManager.getApplicationInfo(intent.getStringExtra("package"), PackageManager.GET_META_DATA));
-                } catch (PackageManager.NameNotFoundException e) {
-                    e.printStackTrace();
-                }
-
-                appName.add(app);
-                notiHead.add(intent.getStringExtra("title"));
-                notiContent.add(intent.getStringExtra("text"));
-
-                Bitmap icon = null;
-                try {
-                    icon = ((BitmapDrawable) getPackageManager().getApplicationIcon(intent.getStringExtra("package"))).getBitmap();
-                } catch (PackageManager.NameNotFoundException e) {
-                    e.printStackTrace();
-                }
-                appIcon.add(icon);
-                id.add(intent.getStringExtra("id"));
-                pendingIntents.add((PendingIntent) intent.getParcelableExtra("intent"));
-                time.add(intent.getStringExtra("time"));
-            }
-            Log.v("dfdf", intent.getStringExtra("time"));
             //update recyclerview
-            recyclerViewAdapter.updateList(appIcon, appName, notiHead, notiContent, id, pendingIntents, time);
+            TextView textView = (TextView) findViewById(R.id.textView);
+            textView.setText(NotificationService.appIcon.size() + " Notifications");
+            recyclerViewAdapter.updateList(NotificationService.appIcon, NotificationService.appName, NotificationService.notiHead, NotificationService.notiContent, NotificationService.id, NotificationService.pendingIntents, NotificationService.time, NotificationService.priorty);
             recyclerViewAdapter.notifyDataSetChanged();
             /*String temp = intent.getStringExtra("notification_event") + "\n" + txtView.getText();
             txtView.setText(temp);*/
@@ -234,15 +188,15 @@ public class ScrollingActivity extends AppCompatActivity implements View.OnClick
             case R.id.button:
                 NotificationManager nManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
                 NotificationCompat.Builder ncomp = new NotificationCompat.Builder(this);
-                ncomp.setContentTitle("My Notification");
-                ncomp.setContentText("Notification Listener Service Example");
-                ncomp.setTicker("Notification Listener Service Example");
-                ncomp.setSmallIcon(R.mipmap.ic_launcher);
+                ncomp.setContentTitle("Notifuzz");
+                ncomp.setContentText("Testing");
+                ncomp.setTicker("1...2...3...");
+                ncomp.setSmallIcon(R.mipmap.signs);
                 ncomp.setAutoCancel(true);
                 nManager.notify((int) System.currentTimeMillis(), ncomp.build());
                 break;
             case R.id.button2:
-                startActivity(new Intent(this,AppSelectionActivity.class));
+                startActivity(new Intent(this, AppSelectionActivity.class));
         }
     }
 }

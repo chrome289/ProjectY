@@ -6,5 +6,6 @@
             android:key="isEnabled"
             android:defaultValue="true"
             android:summary="Notification caught by App"/>
+
     </PreferenceCategory>
 </PreferenceScreen>

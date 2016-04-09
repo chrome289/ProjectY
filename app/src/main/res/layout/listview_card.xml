@@ -23,7 +23,8 @@
             android:orientation="horizontal"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:baselineAligned="false">
+            android:baselineAligned="false"
+            android:background="#efebe9">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -37,7 +38,9 @@
                     android:id="@+id/imageView"
                     android:layout_gravity="center_horizontal"
                     android:contentDescription="icon"
-                    android:background="#efebe9" />
+                    android:background="#efebe9"
+                    android:layout_margin="5dp" />
+
             </LinearLayout>
 
             <LinearLayout
@@ -57,7 +60,8 @@
                     android:textSize="16sp"
                     android:paddingLeft="15dp"
                     android:paddingTop="5dp"
-                    android:paddingBottom="2dp" />
+                    android:paddingBottom="2dp"
+                    android:layout_weight="1" />
 
                 <TextView
                     android:layout_width="fill_parent"
@@ -90,16 +94,30 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textAppearance="?android:attr/textAppearanceSmall"
                         android:text="00:00 AM"
                         android:id="@+id/textView4"
                         android:layout_gravity="right"
                         android:layout_weight="0"
                         android:paddingRight="5dp"
-                        android:paddingLeft="5dp" />
+                        android:paddingLeft="5dp"
+                        android:textSize="11sp" />
                 </LinearLayout>
 
             </LinearLayout>
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="wrap_content"
+                android:layout_height="fill_parent">
+
+                <ImageView
+                    android:layout_width="10dp"
+                    android:layout_height="fill_parent"
+                    android:id="@+id/imageView2"
+                    android:layout_weight="1"
+                    android:background="@color/red" />
+            </LinearLayout>
+
         </LinearLayout>
 
     </android.support.v7.widget.CardView>
