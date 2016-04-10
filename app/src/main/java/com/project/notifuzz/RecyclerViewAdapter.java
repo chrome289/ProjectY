@@ -1,8 +1,6 @@
 package com.project.notifuzz;
 
 
-import android.app.PendingIntent;
-import android.graphics.Bitmap;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -14,16 +12,13 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Locale;
 
-class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewHolder> {
+public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewHolder> {
 
-    private ArrayList<Bitmap> bitmaps;
-    private ArrayList<String> appName;
-    private ArrayList<String> notiHead;
-    private ArrayList<String> notiContent;
-    private ArrayList<String> id;
-    private ArrayList<String> time;
-    private ArrayList<PendingIntent> pendingIntents;
-    private ArrayList<Integer> priority;
+    private ArrayList<NotificationView> notificationView = new ArrayList<>();
+
+    public RecyclerViewAdapter(ArrayList<NotificationView> notificationView) {
+        this.notificationView=notificationView;
+    }
 
     @Override
     public RecyclerViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -35,17 +30,17 @@ class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewHolder> {
 
     @Override
     public void onBindViewHolder(RecyclerViewHolder holder, int position) {
-
         //set data for the viewholder of any entry
-        holder.textView.setText(appName.get(position) + "");
+
+        holder.textView.setText(notificationView.get(position).appName+ "");
         Log.v("fgdfg", "dfgdf");
-        holder.textView2.setText(notiHead.get(position) + "");
-        holder.textView3.setText(notiContent.get(position) + "");
-        holder.imageView.setImageBitmap(bitmaps.get(position));
-        Log.v("fddf", priority.get(position) + "");
-        if (priority.get(position) == 0)
+        holder.textView2.setText(notificationView.get(position).notiHead+ "");
+        holder.textView3.setText(notificationView.get(position).notiContent + "");
+        holder.imageView.setImageBitmap(notificationView.get(position).appIcon);
+        // Log.v("fddf", notificationView.get(position) + "");
+        if (notificationView.get(position).priorty == 0)
             holder.imageView2.setBackgroundResource(R.color.yellow);
-        else if (priority.get(position) > 0)
+        else if (notificationView.get(position).priorty > 0)
             holder.imageView2.setBackgroundResource(R.color.red);
         else
             holder.imageView2.setBackgroundResource(R.color.green);
@@ -53,7 +48,7 @@ class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewHolder> {
         SimpleDateFormat formatter = new SimpleDateFormat("hh:mm a", Locale.getDefault());
 
         Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(Long.parseLong(time.get(position)));
+        calendar.setTimeInMillis(Long.parseLong(notificationView.get(position).time));
         holder.textView4.setText(formatter.format(calendar.getTime()));
     }
 
@@ -62,21 +57,14 @@ class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewHolder> {
     }
 
     //update recyclerview arraylists
-    public void updateList(ArrayList<Bitmap> bitmaps, ArrayList<String> appName, ArrayList<String> notiHead, ArrayList<String> notiContent, ArrayList<String> id, ArrayList<PendingIntent> pendingIntents, ArrayList<String> time, ArrayList<Integer> priority) {
-        this.bitmaps = bitmaps;
-        this.appName = appName;
-        this.notiHead = notiHead;
-        this.notiContent = notiContent;
-        this.id = id;
-        this.pendingIntents = pendingIntents;
-        this.time = time;
-        this.priority = priority;
+    public void updateList(ArrayList<NotificationView> notificationViews) {
+       this.notificationView = notificationViews;
     }
 
     @Override
     public int getItemCount() {
-        if (this.appName != null)
-            return this.appName.size();
+        if (this.notificationView != null)
+            return this.notificationView.size();
         else
             return 0;
     }

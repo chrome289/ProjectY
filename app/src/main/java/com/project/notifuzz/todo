@@ -4,5 +4,7 @@ check_TODO display time
 check_TODO app enable/disable
 check_TODO sort function
 check_TODO collapse toolbar
-TODO categories
+check_TODO categories
 TODO time based
+TODO touch festures disabled.. find workaround
+TODO bugs on resume and state change

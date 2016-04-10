@@ -1,14 +1,11 @@
 package com.project.notifuzz;
 
 import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
@@ -19,22 +16,30 @@ import android.support.v7.app.NotificationCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
+
 public class ScrollingActivity extends AppCompatActivity implements View.OnClickListener {
 
     //arraylist for saving notification data
-    private RecyclerViewAdapter recyclerViewAdapter;
-
+    public static ArrayList<ArrayList<NotificationView>> notificationView=new ArrayList<>();
+    private RecyclerParentViewAdapter recyclerParentViewAdapter;
+    public static Context context;
+    RecyclerView recyclerParentView;
+    public static ArrayList<String> categories=new ArrayList<>();
+    public static ArrayList<RecyclerViewAdapter> recyclerViewAdapters=new ArrayList<>();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_scrolling);
+        context=this;
 
         //initializing preferences
         PreferenceManager.setDefaultValues(this, R.xml.preference, false);
@@ -43,92 +48,36 @@ public class ScrollingActivity extends AppCompatActivity implements View.OnClick
         toolbar.setTitle("Notifuzz");
         setSupportActionBar(toolbar);
 
-        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
+        recyclerParentView = (RecyclerView) findViewById(R.id.recyclerView);
 
         //layoutmanager for recyclerview
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(this);
-        recyclerView.setLayoutManager(mLayoutManager);
+        recyclerParentView.setLayoutManager(mLayoutManager);
 
-        //onClick listener
-        recyclerView.addOnItemTouchListener(
-                new RecyclerItemClickListener(this, new RecyclerItemClickListener.OnItemClickListener() {
-                    @Override
-                    public void onItemClick(View view, int position) {
-                        try {
-                            if (NotificationService.pendingIntents.get(position) != null) {
-                                //pendingIntent used
-                                NotificationService.pendingIntents.get(position).send();
-                            }
-                            //remove entry from recyclerview
-                            NotificationService.appIcon.remove(position);
-                            NotificationService.notiContent.remove(position);
-                            NotificationService.notiHead.remove(position);
-                            NotificationService.pendingIntents.remove(position);
-                            NotificationService.id.remove(position);
-                            NotificationService.appName.remove(position);
-                            NotificationService.time.remove(position);
-                            NotificationService.priorty.remove(position);
-                            recyclerViewAdapter.notifyDataSetChanged();
-                            TextView textView = (TextView) findViewById(R.id.textView);
-                            textView.setText(NotificationService.appIcon.size() + " Notifications");
+        SharedPreferences sharedPreferences=PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor=sharedPreferences.edit();
+        Set<String> stringSet =sharedPreferences.getStringSet("categories",new HashSet<String>());
+        Set<String> stringSet2 =sharedPreferences.getStringSet("cat_color", new HashSet<String>());
+        if(!stringSet.contains("General")){
+            stringSet.add("General");
+            stringSet2.add("-3618616");
+            editor.putStringSet("categories",stringSet);
+            editor.putStringSet("cat_color",stringSet2);
+            editor.commit();
+        }
 
-                        } catch (PendingIntent.CanceledException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                })
-        );
-        //ItemTouchHelper callback for swipe gesture
-        ItemTouchHelper.SimpleCallback simpleItemTouchCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
-            @Override
-            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
-                return false;
+        if(categories.size()==0) {
+            for (int i = 0; i < stringSet.size(); i++) {
+                Log.v("Message", stringSet.toArray()[i] + "     " + stringSet2.toArray()[i]);
+                categories.add((String) stringSet.toArray()[i]);
+                notificationView.add(new ArrayList<NotificationView>());
+                recyclerViewAdapters.add(new RecyclerViewAdapter(notificationView.get(i)));
             }
+        }
 
-            //draw colored rectangle during swipe gesture
-            @Override
-            public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
-                if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
-                    View itemView = viewHolder.itemView;
-
-                    Paint p = new Paint();
-                    p.setColor(Color.rgb(224, 160, 150));
-                    if (dX > 0)
-                        c.drawRect((float) itemView.getLeft(), (float) itemView.getTop(), dX,
-                                (float) itemView.getBottom(), p);
-                    else
-                        c.drawRect((float) itemView.getRight() + dX, (float) itemView.getTop(),
-                                (float) itemView.getRight(), (float) itemView.getBottom(), p);
-
-                    super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
-                }
-            }
-
-            //clear entry from recyclerview on swipeCompleted
-            @Override
-            public void onSwiped(RecyclerView.ViewHolder viewHolder, int swipeDir) {
-                NotificationService.appIcon.remove(viewHolder.getAdapterPosition());
-                NotificationService.notiContent.remove(viewHolder.getAdapterPosition());
-                NotificationService.notiHead.remove(viewHolder.getAdapterPosition());
-                NotificationService.pendingIntents.remove(viewHolder.getAdapterPosition());
-                NotificationService.id.remove(viewHolder.getAdapterPosition());
-                NotificationService.appName.remove(viewHolder.getAdapterPosition());
-                NotificationService.time.remove(viewHolder.getAdapterPosition());
-                NotificationService.priorty.remove(viewHolder.getAdapterPosition());
-                recyclerViewAdapter.notifyDataSetChanged();
-                TextView textView = (TextView) findViewById(R.id.textView);
-                textView.setText(NotificationService.appIcon.size() + " Notifications");
-
-            }
-        };
-
-        //assign ItemTouchCallback to recyclerview
-        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleItemTouchCallback);
-        itemTouchHelper.attachToRecyclerView(recyclerView);
-
-        recyclerViewAdapter = new RecyclerViewAdapter();
-        //set adapter
-        recyclerView.setAdapter(recyclerViewAdapter);
+        recyclerParentViewAdapter=new RecyclerParentViewAdapter(categories,recyclerViewAdapters,notificationView);
+        recyclerParentView.setAdapter(recyclerParentViewAdapter);
+        recyclerParentViewAdapter.notifyDataSetChanged();
 
         FloatingActionButton button = (FloatingActionButton) this.findViewById(R.id.button);
         button.setOnClickListener(this);
@@ -141,9 +90,12 @@ public class ScrollingActivity extends AppCompatActivity implements View.OnClick
         }
 
         TextView textView = (TextView) findViewById(R.id.textView);
-        textView.setText(NotificationService.appIcon.size() + " Notifications");
-        recyclerViewAdapter.updateList(NotificationService.appIcon, NotificationService.appName, NotificationService.notiHead, NotificationService.notiContent, NotificationService.id, NotificationService.pendingIntents, NotificationService.time, NotificationService.priorty);
-        recyclerViewAdapter.notifyDataSetChanged();
+        int counter=0;
+        for(int i=0;i<notificationView.size();i++)
+            counter+=notificationView.get(i).size();
+        textView.setText(counter + " Notifications");
+        //RecyclerViewAdapter.updateList(NotificationService.notificationView);
+        //recyclerViewAdapter.notifyDataSetChanged();
         //register broadcast reciever from service
         LocalBroadcastManager.getInstance(this).registerReceiver(onNotice, new IntentFilter("Msg"));
 
@@ -174,11 +126,16 @@ public class ScrollingActivity extends AppCompatActivity implements View.OnClick
             Log.v("Message", "recieved");
             //update recyclerview
             TextView textView = (TextView) findViewById(R.id.textView);
-            textView.setText(NotificationService.appIcon.size() + " Notifications");
-            recyclerViewAdapter.updateList(NotificationService.appIcon, NotificationService.appName, NotificationService.notiHead, NotificationService.notiContent, NotificationService.id, NotificationService.pendingIntents, NotificationService.time, NotificationService.priorty);
-            recyclerViewAdapter.notifyDataSetChanged();
-            /*String temp = intent.getStringExtra("notification_event") + "\n" + txtView.getText();
-            txtView.setText(temp);*/
+            int counter=0;
+            for(int i=0;i<notificationView.size();i++)
+                counter+=notificationView.get(i).size();
+            textView.setText(counter + " Notifications");
+
+            for(int i=0;i<recyclerViewAdapters.size();i++)
+                recyclerViewAdapters.get(i).notifyDataSetChanged();
+
+            recyclerParentViewAdapter.notifyDataSetChanged();
+
         }
     };
 
@@ -189,7 +146,7 @@ public class ScrollingActivity extends AppCompatActivity implements View.OnClick
                 NotificationManager nManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
                 NotificationCompat.Builder ncomp = new NotificationCompat.Builder(this);
                 ncomp.setContentTitle("Notifuzz");
-                ncomp.setContentText("Testing");
+                ncomp.setContentText("Testing "+System.currentTimeMillis()/1000);
                 ncomp.setTicker("1...2...3...");
                 ncomp.setSmallIcon(R.mipmap.signs);
                 ncomp.setAutoCancel(true);
@@ -198,5 +155,13 @@ public class ScrollingActivity extends AppCompatActivity implements View.OnClick
             case R.id.button2:
                 startActivity(new Intent(this, AppSelectionActivity.class));
         }
+    }
+
+    public  void remove(){
+        TextView textView = (TextView)findViewById(R.id.textView);
+        int counter=0;
+        for(int i=0;i<notificationView.size();i++)
+            counter+=notificationView.get(i).size();
+        textView.setText(counter + " Notifications");
     }
 }
