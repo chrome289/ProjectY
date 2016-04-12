@@ -68,7 +68,7 @@ public class ListViewAdapter extends BaseAdapter {
                 }
             });
             String temp=AppSelectionActivity.appDet.get(position).category;
-            Log.v("Message2",temp);
+            Log.v("Message2",temp+"   "+AppSelectionActivity.appDet.get(position).name);
             if(AppSelectionActivity.tileText.indexOf(temp)!=-1)
                 spinner.setSelection(AppSelectionActivity.tileText.indexOf(temp));
             else

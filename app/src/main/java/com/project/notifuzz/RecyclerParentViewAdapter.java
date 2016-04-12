@@ -1,7 +1,12 @@
 package com.project.notifuzz;
 
+import android.app.PendingIntent;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -42,18 +47,19 @@ public class RecyclerParentViewAdapter extends RecyclerView.Adapter<RecyclerPare
         holder.recyclerView.setLayoutParams(params);
 
         //onClick listener
-        /*holder.recyclerView.addOnItemTouchListener(
+        holder.recyclerView.addOnItemTouchListener(
                 new RecyclerItemClickListener(ScrollingActivity.context, new RecyclerItemClickListener.OnItemClickListener() {
                     @Override
-                    public void onItemClick(View view, int position) {
+                    public void onItemClick(View view, int pos) {
                         try {
-                            if (notificationView.get(position2).get(position).pendingIntents != null) {
+                            if (notificationView.get(position).get(pos).pendingIntents != null) {
                                 //pendingIntent used
-                                notificationView.get(position2).get(position).pendingIntents.send();
+                                notificationView.get(position).get(pos).pendingIntents.send();
                             }
                             //remove entry from recyclerview
-                            notificationView.get(position2).remove(position);
-                            recyclerViewAdapters.get(position2).notifyDataSetChanged();
+                            notificationView.get(position).remove(pos);
+                            recyclerViewAdapters.get(position).notifyDataSetChanged();
+                            ScrollingActivity.update();
                         } catch (PendingIntent.CanceledException e) {
                             e.printStackTrace();
                         }
@@ -89,16 +95,18 @@ public class RecyclerParentViewAdapter extends RecyclerView.Adapter<RecyclerPare
             //clear entry from recyclerview on swipeCompleted
             @Override
             public void onSwiped(RecyclerView.ViewHolder viewHolder, int swipeDir) {
-                notificationView.remove(viewHolder.getAdapterPosition());
-                recyclerViewAdapters.get(position2).notifyDataSetChanged();
+                notificationView.get(position).remove(viewHolder.getAdapterPosition());
+                recyclerViewAdapters.get(position).notifyDataSetChanged();
+                ScrollingActivity.update();
             }
-        };*/
+        };
 
         //assign ItemTouchCallback to recyclerview
-        //ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleItemTouchCallback);
-        //itemTouchHelper.attachToRecyclerView(holder.recyclerView);
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleItemTouchCallback);
+        itemTouchHelper.attachToRecyclerView(holder.recyclerView);
 
         holder.recyclerView.setAdapter(recyclerViewAdapters.get(position));
+        holder.imageButton.setRotation(180);
         holder.imageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

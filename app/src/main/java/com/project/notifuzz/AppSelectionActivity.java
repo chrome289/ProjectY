@@ -58,6 +58,17 @@ public class AppSelectionActivity extends AppCompatActivity implements View.OnCl
     static SharedPreferences.Editor editor;
 
     @Override
+    public void onStop(){
+        super.onStop();
+    }
+
+    @Override
+    public void onBackPressed(){
+        appDet=null;
+        super.onBackPressed();
+    }
+
+    @Override
     public void onClick(View view) {
         if (view.getId() == R.id.button3) {
             final ColorPicker colorPicker = new ColorPicker(AppSelectionActivity.this, 200, 200, 200);
@@ -139,7 +150,7 @@ public class AppSelectionActivity extends AppCompatActivity implements View.OnCl
         }
     }
 
-    public static ArrayList<AppDet> appDet = new ArrayList<>();
+    static ArrayList<AppDet> appDet = new ArrayList<>();
 
     public void switchTabs(boolean direction) {
         if (direction) // true = move left
@@ -394,8 +405,9 @@ public class AppSelectionActivity extends AppCompatActivity implements View.OnCl
         //get complete app list
         PackageManager pm = getPackageManager();
         List<ApplicationInfo> packages = pm.getInstalledApplications(PackageManager.GET_META_DATA);
+        AppDet temp;
         for (ApplicationInfo packageInfo : packages) {
-            AppDet temp = new AppDet();
+            temp = new AppDet();
             temp.app = packageInfo.packageName;
             if (!sharedPreferences.contains(packageInfo.packageName)) {
                 editor.putBoolean(packageInfo.packageName, true);
@@ -417,6 +429,7 @@ public class AppSelectionActivity extends AppCompatActivity implements View.OnCl
                 e.printStackTrace();
             }
             appDet.add(temp);
+            temp=null;
         }
         Collections.sort(appDet, new AppComparator());
         listViewAdapter.notifyDataSetChanged();

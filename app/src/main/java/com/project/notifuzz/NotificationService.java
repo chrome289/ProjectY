@@ -3,8 +3,8 @@ package com.project.notifuzz;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
 import android.os.Bundle;
@@ -14,10 +14,18 @@ import android.service.notification.StatusBarNotification;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
+
 public class NotificationService extends NotificationListenerService {
 
     private Context context;
     int counter = 0;
+
+    public static ArrayList<String> categories = new ArrayList<>();
+    public static ArrayList<RecyclerViewAdapter> recyclerViewAdapters = new ArrayList<>();
+    public static ArrayList<ArrayList<NotificationView>> notificationView = new ArrayList<>();
 
     private PendingIntent pen;
     private String timeS;
@@ -26,6 +34,25 @@ public class NotificationService extends NotificationListenerService {
     public void onCreate() {
         super.onCreate();
         context = getApplicationContext();
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        Set<String> stringSet = sharedPreferences.getStringSet("categories", new HashSet<String>());
+        Set<String> stringSet2 = sharedPreferences.getStringSet("cat_color", new HashSet<String>());
+        if (!stringSet.contains("General")) {
+            stringSet.add("General");
+            stringSet2.add("-3618616");
+            editor.putStringSet("categories", stringSet);
+            editor.putStringSet("cat_color", stringSet2);
+            editor.commit();
+        }
+        if (categories.size() == 0) {
+            for (int i = 0; i < stringSet.size(); i++) {
+                Log.v("Message", stringSet.toArray()[i] + "     " + stringSet2.toArray()[i]);
+                categories.add((String) stringSet.toArray()[i]);
+                notificationView.add(new ArrayList<NotificationView>());
+                recyclerViewAdapters.add(new RecyclerViewAdapter(notificationView.get(i)));
+            }
+        }
     }
 
     @Override
@@ -35,8 +62,8 @@ public class NotificationService extends NotificationListenerService {
         if (PreferenceManager.getDefaultSharedPreferences(this).getBoolean("isEnabled", false)) {
             String pack = sbn.getPackageName();
             //check if app enabled
-            if(PreferenceManager.getDefaultSharedPreferences(this).getBoolean(pack,true)) {
-                NotificationView temp=new NotificationView();
+            if (PreferenceManager.getDefaultSharedPreferences(this).getBoolean(pack, true)) {
+                NotificationView temp = new NotificationView();
                 counter++;
                 //get data of notification and bundle it into an intent
                 Bundle extras = sbn.getNotification().extras;
@@ -45,8 +72,8 @@ public class NotificationService extends NotificationListenerService {
                 String text = extras.getCharSequence("android.text").toString();
                 String idS = sbn.getId() + sbn.getPackageName();
 
-                String str=PreferenceManager.getDefaultSharedPreferences(this).getString("cat_"+sbn.getPackageName(),"General");
-                int pos=ScrollingActivity.categories.indexOf(str);
+                String str = PreferenceManager.getDefaultSharedPreferences(this).getString("cat_" + sbn.getPackageName(), "General");
+                int pos = categories.indexOf(str);
 
                 //remove notification via key if available
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -61,7 +88,8 @@ public class NotificationService extends NotificationListenerService {
                     pen = null;
                 timeS = sbn.getPostTime() + "";
 
-                if (NotificationView.searchID(ScrollingActivity.notificationView.get(pos),idS)) {
+                if (NotificationView.searchID(notificationView.get(pos), idS)) {
+                    int pos2 = NotificationView.indexOfID(notificationView.get(pos), idS);
                     //get data from recieved intent and assign
                     PackageManager packageManager = getApplicationContext().getPackageManager();
                     String app = null;
@@ -70,22 +98,20 @@ public class NotificationService extends NotificationListenerService {
                     } catch (PackageManager.NameNotFoundException e) {
                         e.printStackTrace();
                     }
-                    ScrollingActivity.notificationView.get(pos).get(NotificationView.indexOfID(ScrollingActivity.notificationView.get(pos),idS)).appName=app;
-                    ScrollingActivity.notificationView.get(pos).get(NotificationView.indexOfID(ScrollingActivity.notificationView.get(pos),idS)).notiHead=title;
-                    ScrollingActivity.notificationView.get(pos).get(NotificationView.indexOfID(ScrollingActivity.notificationView.get(pos),idS)).notiContent=text;
+                    notificationView.get(pos).get(pos2).appName = app;
+                    notificationView.get(pos).get(pos2).notiHead = title;
+                    notificationView.get(pos).get(pos2).notiContent = text;
 
 
-                    Bitmap icon = null;
                     try {
-                        icon = ((BitmapDrawable) getPackageManager().getApplicationIcon(pack)).getBitmap();
+                        notificationView.get(pos).get(pos2).appIcon = ((BitmapDrawable) getPackageManager().getApplicationIcon(pack)).getBitmap();
                     } catch (PackageManager.NameNotFoundException e) {
                         e.printStackTrace();
                     }
-                    ScrollingActivity.notificationView.get(pos).get(NotificationView.indexOfID(ScrollingActivity.notificationView.get(pos),idS)).appIcon=icon;
-                    ScrollingActivity.notificationView.get(pos).get(NotificationView.indexOfID(ScrollingActivity.notificationView.get(pos),idS)).id=idS;
-                    ScrollingActivity.notificationView.get(pos).get(NotificationView.indexOfID(ScrollingActivity.notificationView.get(pos),idS)).pendingIntents=pen;
-                    ScrollingActivity.notificationView.get(pos).get(NotificationView.indexOfID(ScrollingActivity.notificationView.get(pos),idS)).time=timeS;
-                    ScrollingActivity.notificationView.get(pos).get(NotificationView.indexOfID(ScrollingActivity.notificationView.get(pos),idS)).priorty=priortyS;
+                    notificationView.get(pos).get(pos2).id = idS;
+                    notificationView.get(pos).get(pos2).pendingIntents = pen;
+                    notificationView.get(pos).get(pos2).time = timeS;
+                    notificationView.get(pos).get(pos2).priorty = priortyS;
 
                 } else {
                     PackageManager packageManager = getApplicationContext().getPackageManager();
@@ -96,22 +122,20 @@ public class NotificationService extends NotificationListenerService {
                         e.printStackTrace();
                     }
 
-                    temp.appName=app;
-                    temp.notiHead=title;
-                    temp.notiContent=text;
+                    temp.appName = app;
+                    temp.notiHead = title;
+                    temp.notiContent = text;
 
-                    Bitmap icon = null;
                     try {
-                        icon = ((BitmapDrawable) getPackageManager().getApplicationIcon(pack)).getBitmap();
+                        temp.appIcon = ((BitmapDrawable) getPackageManager().getApplicationIcon(pack)).getBitmap();
                     } catch (PackageManager.NameNotFoundException e) {
                         e.printStackTrace();
                     }
-                    temp.appIcon=icon;
-                    temp.id=idS;
-                    temp.pendingIntents=pen;
-                    temp.priorty=priortyS;
-                    temp.time=timeS;
-                    ScrollingActivity.notificationView.get(pos).add(temp);
+                    temp.id = idS;
+                    temp.pendingIntents = pen;
+                    temp.priorty = priortyS;
+                    temp.time = timeS;
+                    notificationView.get(pos).add(temp);
                 }
 
                 //send broadcast to activity for gui update
